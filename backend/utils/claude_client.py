@@ -20,8 +20,18 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
-# Single shared client instance
-_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+_client: anthropic.Anthropic | None = None
+
+
+def _get_client() -> anthropic.Anthropic:
+    global _client
+    if _client is None:
+        if not ANTHROPIC_API_KEY:
+            raise RuntimeError(
+                "ANTHROPIC_API_KEY is not set. Add it to Railway → Variables."
+            )
+        _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    return _client
 
 
 def call_claude(
@@ -60,7 +70,7 @@ def call_claude(
     logger.debug("Calling Claude | model=%s | max_tokens=%d | temp=%.1f",
                  CLAUDE_MODEL, max_tokens, temperature)
 
-    response = _client.messages.create(**kwargs)
+    response = _get_client().messages.create(**kwargs)
     text = response.content[0].text
 
     logger.debug("Claude response (%d chars): %s...", len(text), text[:200])

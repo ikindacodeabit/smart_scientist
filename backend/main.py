@@ -22,6 +22,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
+import os
+
 from pipeline import create_run, run_pipeline_streaming, run_queues
 
 logging.basicConfig(
@@ -29,6 +31,10 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+if not os.getenv("ANTHROPIC_API_KEY"):
+    logger.error("ANTHROPIC_API_KEY is not set — add it to Railway Variables and redeploy.")
+    raise SystemExit(1)
 
 app = FastAPI(title="AI Scientist API", version="0.1.0")
 
